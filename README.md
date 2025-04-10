@@ -1,83 +1,61 @@
-# Spring Boot Thymeleaf example: CRUD Application
+Property File Editor - Spring Boot Application
+Overview:
+The Property File Editor is a web-based application built using Spring Boot that allows users to manage configuration properties stored in a local .properties file. It provides a user-friendly interface to load, view, and update property key-value pairs dynamically, with real-time feedback on successful updates.
+Key Features:  
+Dynamic File Selection:  
+Users can specify the full path to a .properties file on the local file system via an initial file selection page.  
 
-Build a Spring Boot Thymeleaf CRUD example with Maven that use Spring Data JPA to interact with H2/MySQL/PostgreSQL database. You'll know:
-- How to configure Spring Data, JPA, Hibernate to work with Database
-- How to define Data Entity and Repository interfaces
-- Way to create Spring Controller to process HTTP requests
-- Way to use Spring Data JPA to interact with H2/MySQL/PostgreSQL Database
-- How to use Thymeleaf template engine for View layer
+The application creates the file if it doesn’t exist, ensuring seamless operation.
 
-![spring-boot-thymeleaf-example](spring-boot-thymeleaf-example.png)
+Property Management Interface:  
+Displays all properties from the selected file in a tabular format with columns for Key, Value, Action, and Status.  
 
-For more detail, please visit:
-> [Spring Boot Thymeleaf example: CRUD Application](https://www.bezkoder.com/spring-boot-thymeleaf-example/)
+Values are presented in editable input fields that become active on click, maintaining a clean and intuitive UI.
 
-More Practice:
-> [Thymeleaf Pagination example](https://www.bezkoder.com/thymeleaf-pagination/)
+Real-Time Updates:  
+An "Update" button in the Action column allows users to modify property values.  
 
-> [Thymeleaf Pagination and Sorting example](https://www.bezkoder.com/thymeleaf-pagination-and-sorting-example/)
+Upon clicking, the updated value is saved to the properties file, and a "Success" message appears in the Status column for the modified row.
 
-> [Spring Boot File upload example with Multipart File](https://www.bezkoder.com/spring-boot-file-upload/)
+Feedback Mechanism:  
+Successful updates are visually confirmed with a green "Success" message in the Status column, providing immediate user feedback.  
 
-> [Spring Boot Pagination & Filter example | Spring JPA, Pageable](https://www.bezkoder.com/spring-boot-pagination-filter-jpa-pageable/)
+The status is temporary, clearing on page refresh or subsequent updates for a streamlined experience.
 
-> [Spring Data JPA Sort/Order by multiple Columns | Spring Boot](https://www.bezkoder.com/spring-data-sort-multiple-columns/)
+Technical Details:  
+Framework: Spring Boot 3.2.4 with Thymeleaf for server-side rendering.  
 
-> [Spring Boot Repository Unit Test with @DataJpaTest](https://www.bezkoder.com/spring-boot-unit-test-jpa-repo-datajpatest/)
+Dependencies: Spring Web for RESTful endpoints, Thymeleaf for templating, and Maven for build management.  
 
-> [Deploy Spring Boot App on AWS – Elastic Beanstalk](https://www.bezkoder.com/deploy-spring-boot-aws-eb/)
+Frontend: HTML with embedded JavaScript for dynamic form handling and CSS for styling.  
 
-Exception Handling:
-> [Spring Boot @ControllerAdvice & @ExceptionHandler example](https://www.bezkoder.com/spring-boot-controlleradvice-exceptionhandler/)
+Backend: Java-based service layer to read from and write to the properties file using the Properties class.  
 
-> [@RestControllerAdvice example in Spring Boot](https://www.bezkoder.com/spring-boot-restcontrolleradvice/)
+Architecture:  
+Controller: Handles file selection, property loading, and updates, passing data to the view layer.  
 
-Rest API:
-> [Spring Boot + MySQL: CRUD Rest API example](https://www.bezkoder.com/spring-boot-jpa-crud-rest-api/)
+Service: Manages file I/O operations and property manipulation.  
 
-> [Spring Boot + PostgreSQL: CRUD Rest API example](https://www.bezkoder.com/spring-boot-postgresql-example/)
+Views: Two templates—file-selection.html for file input and index.html for property management.
 
-> [Spring Boot + SQL Server: CRUD Rest API example](https://www.bezkoder.com/spring-boot-sql-server/)
+Usage:  
+Launch the application via mvn spring-boot:run.  
 
-> [Spring Boot + H2: CRUD Rest API example](https://www.bezkoder.com/spring-boot-jpa-h2-example/)
+Access it at http://localhost:8080.  
 
-> [Spring Boot + MongoDB: CRUD Rest API example](https://www.bezkoder.com/spring-boot-mongodb-crud/)
+Enter the path to a .properties file (e.g., C:/temp/config.properties).  
 
-> [Spring Boot + Oracle: CRUD Rest API example](https://www.bezkoder.com/spring-boot-hibernate-oracle/)
+View and edit properties in the table, with updates reflected in the file instantly.
 
-> [Spring Boot + Cassandra: CRUD Rest API example](https://www.bezkoder.com/spring-boot-cassandra-crud/)
+Potential Enhancements:  
+Add error handling for file access issues or invalid inputs.  
 
-Security:
-> [Spring Boot + Spring Security JWT Authentication & Authorization](https://www.bezkoder.com/spring-boot-jwt-authentication/)
+Implement persistent status messages or a history of updates.  
 
-Fullstack:
-> [Vue + Spring Boot example](https://www.bezkoder.com/spring-boot-vue-js-crud-example/)
+Enhance security with authentication and CSRF protection for production use.  
 
-> [Angular 8 + Spring Boot example](https://www.bezkoder.com/angular-spring-boot-crud/)
+Improve UX with loading indicators or advanced styling.
 
-> [Angular 10 + Spring Boot example](https://www.bezkoder.com/angular-10-spring-boot-crud/)
-
-> [Angular 11 + Spring Boot example](https://www.bezkoder.com/angular-11-spring-boot-crud/)
-
-> [Angular 12 + Spring Boot example](https://www.bezkoder.com/angular-12-spring-boot-crud/)
-
-> [Angular 13 + Spring Boot example](https://www.bezkoder.com/spring-boot-angular-13-crud/)
-
-> [Angular 14 + Spring Boot example](https://www.bezkoder.com/spring-boot-angular-14-crud/)
-
-> [React + Spring Boot + MySQL example](https://www.bezkoder.com/react-spring-boot-crud/)
-
-> [React + Spring Boot + PostgreSQL example](https://www.bezkoder.com/spring-boot-react-postgresql/)
-
-Run both Back-end & Front-end in one place:
-> [Integrate Angular with Spring Boot Rest API](https://www.bezkoder.com/integrate-angular-spring-boot/)
-
-> [Integrate React.js with Spring Boot Rest API](https://www.bezkoder.com/integrate-reactjs-spring-boot/)
-
-> [Integrate Vue.js with Spring Boot Rest API](https://www.bezkoder.com/integrate-vue-spring-boot/)
-
-## Run Spring Boot application
-```
-mvn spring-boot:run
-```
+Purpose:
+Designed as a lightweight tool for developers and administrators to manage configuration files without manual editing, this application combines simplicity with functionality, making property management efficient and accessible through a web interface.
 

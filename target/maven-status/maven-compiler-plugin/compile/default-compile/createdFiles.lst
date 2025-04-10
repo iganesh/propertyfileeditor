@@ -1,0 +1,3 @@
+com\bezkoder\spring\thymeleaf\SpringBootThymeleafExampleApplication.class
+com\bezkoder\spring\thymeleaf\controller\PropertyService.class
+com\bezkoder\spring\thymeleaf\controller\PropertyController.class

@@ -1,0 +1,40 @@
+<!-- src/main/resources/templates/file-selection.html -->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Select Properties File</title>
+    <style>
+        .container {
+            width: 50%;
+            margin: 50px auto;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 70%;
+            padding: 8px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Select Properties File</h2>
+    <form method="post" th:action="@{/load-properties}">
+        <input type="text" name="filePath" placeholder="Enter full path to properties file (e.g., C:/temp/config.properties)">
+        <br>
+        <button type="submit">Load Properties</button>
+    </form>
+</div>
+</body>
+</html>

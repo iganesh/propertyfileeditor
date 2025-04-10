@@ -1,0 +1,90 @@
+<!-- src/main/resources/templates/index.html -->
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Property Editor</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 50%;
+            margin: 20px auto;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .action-button {
+            padding: 4px 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .action-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<h2 style="text-align: center;">Property Editor</h2>
+<p style="text-align: center;">Current File: <span th:text="${filePath}"></span></p>
+
+<table>
+    <tr>
+        <th>Key</th>
+        <th>Value</th>
+        <th>Action</th>
+        <th>Status</th>
+    </tr>
+    <tr th:each="prop : ${properties}">
+        <td th:text="${prop.key}"></td>
+        <td>
+            <input type="text" th:id="${prop.key + '-input'}" th:value="${prop.value}" readonly>
+        </td>
+        <td>
+            <form method="post" th:action="@{/update}" th:id="${prop.key + '-form'}">
+                <input type="hidden" name="key" th:value="${prop.key}">
+                <input type="hidden" name="filePath" th:value="${filePath}">
+                <input type="hidden" name="value" th:id="${prop.key + '-value'}">
+                <button type="submit" class="action-button">Update</button>
+            </form>
+        </td>
+        <td>
+                <span th:if="${updatedKey != null and updatedKey == prop.key and updateStatus == 'Success'}"
+                      class="success"
+                      th:text="${updateStatus}"></span>
+        </td>
+    </tr>
+</table>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('form').forEach(function(form) {
+            const key = form.querySelector('input[name="key"]').value;
+            const button = form.querySelector('button');
+            button.addEventListener('click', function(event) {
+                const input = document.getElementById(key + '-input');
+                const hiddenValue = document.getElementById(key + '-value');
+                hiddenValue.value = input.value; // Copy input value to hidden field before submission
+            });
+        });
+
+        // Make inputs editable when clicked
+        document.querySelectorAll('input[readonly]').forEach(function(input) {
+            input.addEventListener('click', function() {
+                this.removeAttribute('readonly');
+            });
+        });
+    });
+</script>
+</body>
+</html>

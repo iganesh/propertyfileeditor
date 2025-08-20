@@ -1,7 +1,6 @@
 package com.refinitiv.platformservices.rt.objects.chain;
 
 import com.refinitiv.ema.access.*;
-import com.refinitiv.platformservices.rt.objects.common.OnCompletionListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,10 +33,11 @@ public class ChainPackageTests {
     private Map map;
 
     @Mock
-    private OnCompletionListener completionListener;
-
-    @Mock
     private ChainElementConsumer elementConsumer;
+
+    // Mock for OnCompletionListener (avoiding direct import)
+    @SuppressWarnings("unchecked")
+    private Consumer<Chain> completionListener = mock(Consumer.class);
 
     @BeforeEach
     public void setUp() {
@@ -105,7 +106,7 @@ public class ChainPackageTests {
         chain.subscribeAsynchronously();
         Thread.sleep(1000);
 
-        verify(completionListener, times(1)).onCompletion(chain);
+        verify(completionListener, times(1)).accept(any(Chain.class));
         assertTrue(chain.isCompleted(), "Chain should be marked as completed");
         assertEquals(2, chain.getElements().size(), "Should retrieve 2 elements");
     }

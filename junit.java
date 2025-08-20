@@ -1,8 +1,7 @@
-package com.refinitiv.platformservices.rt.objects;
+package com.refinitiv.platformservices.rt.objects.chain;
 
 import com.refinitiv.ema.access.*;
-import com.refinitiv.platformservices.rt.objects.chain.*;
-import com.refinitiv.platformservices.rt.objects.common.*;
+import com.refinitiv.platformservices.rt.objects.common.OnCompletionListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +18,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ValueAddObjectsTests {
+public class ChainPackageTests {
 
     @Mock
     private OmmConsumer ommConsumer;
@@ -34,68 +33,31 @@ public class ValueAddObjectsTests {
     private Map map;
 
     @Mock
-    private OmmConsumerClient ommConsumerClient;
+    private OnCompletionListener completionListener;
 
-    private SimpleLogger logger;
-    private StringBuilder logOutput;
+    @Mock
+    private ChainElementConsumer elementConsumer;
 
     @BeforeEach
     public void setUp() {
-        logger = SimpleLogger.create();
-        logOutput = new StringBuilder();
-        SimpleLogger.setLogConsumer(message -> logOutput.append(message).append("\n"));
         when(ommConsumer.registerClient(any(ReqMsg.class), any(OmmConsumerClient.class), any()))
                 .thenReturn(123L);
     }
 
-    // Tests for common package
+    // FlatChain Tests
     @Test
-    void testSimpleLogger_CreateAndLog() {
-        SimpleLogger logger = SimpleLogger.create();
-        logger.log("Test message");
-        assertTrue(logOutput.toString().contains("Test message"));
-    }
-
-    @Test
-    void testSimpleLogger_NullLogConsumer() {
-        SimpleLogger.setLogConsumer(null);
-        logger.log("Test message"); // Should not throw NPE
-        assertFalse(logOutput.toString().contains("Test message"));
-    }
-
-    @Test
-    void testSimpleLogger_MultipleLogs() {
-        logger.log("First message");
-        logger.log("Second message");
-        assertTrue(logOutput.toString().contains("First message"));
-        assertTrue(logOutput.toString().contains("Second message"));
-    }
-
-    @Test
-    void testValueAddObjectsForEmaException_MessageOnly() {
-        String message = "Test exception";
-        ValueAddObjectsForEmaException ex = new ValueAddObjectsForEmaException(message);
-        assertEquals(message, ex.getMessage());
-        assertNull(ex.getCause());
-    }
-
-    @Test
-    void testValueAddObjectsForEmaException_MessageAndCause() {
-        String message = "Test exception";
-        Throwable cause = new RuntimeException("Root cause");
-        ValueAddObjectsForEmaException ex = new ValueAddObjectsForEmaException(message, cause);
-        assertEquals(message, ex.getMessage());
-        assertEquals(cause, ex.getCause());
-    }
-
-    // Tests for chain package - FlatChain
-    @Test
-    void testFlatChain_BuilderValidation() {
-        assertThrows(ValueAddObjectsForEmaException.class, () -> FlatChain.Builder().build());
-        assertThrows(ValueAddObjectsForEmaException.class, () -> 
-            FlatChain.Builder().withChainName("0#TEST.CHA").build());
-        assertThrows(ValueAddObjectsForEmaException.class, () -> 
-            FlatChain.Builder().with(ommConsumer).build());
+    void testFlatChain_BuilderValidation_NullParameters() {
+        assertThrows(ValueAddObjectsForEmaException.class, () -> FlatChain.Builder().build(),
+                "Builder should throw exception for missing OmmConsumer");
+        assertThrows(ValueAddObjectsForEmaException.class, () ->
+                        FlatChain.Builder().withChainName("0#TEST.CHA").build(),
+                "Builder should throw exception for missing OmmConsumer");
+        assertThrows(ValueAddObjectsForEmaException.class, () ->
+                        FlatChain.Builder().with(ommConsumer).build(),
+                "Builder should throw exception for missing chain name");
+        assertThrows(ValueAddObjectsForEmaException.class, () ->
+                        FlatChain.Builder().with(ommConsumer).withChainName("").build(),
+                "Builder should throw exception for empty chain name");
     }
 
     @Test
@@ -116,16 +78,16 @@ public class ValueAddObjectsTests {
         CountDownLatch latch = new CountDownLatch(1);
         chain.subscribeSynchronously(() -> latch.countDown());
 
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
-        assertTrue(chain.isCompleted());
-        assertEquals(2, chain.getElements().size());
-        assertTrue(chain.getElements().contains("TEST1"));
-        assertTrue(chain.getElements().contains("TEST2"));
+        assertTrue(latch.await(2, TimeUnit.SECONDS), "Synchronous subscription should complete");
+        assertTrue(chain.isCompleted(), "Chain should be marked as completed");
+        List<String> elements = chain.getElements();
+        assertEquals(2, elements.size(), "Should retrieve 2 elements");
+        assertTrue(elements.contains("TEST1"), "Elements should include TEST1");
+        assertTrue(elements.contains("TEST2"), "Elements should include TEST2");
     }
 
     @Test
     void testFlatChain_AsynchronousSubscription_CompletionListener() throws InterruptedException {
-        OnCompletionListener completionListener = mock(OnCompletionListener.class);
         FlatChain chain = FlatChain.Builder()
                 .with(ommConsumer)
                 .withChainName("0#TEST.CHA")
@@ -144,12 +106,35 @@ public class ValueAddObjectsTests {
         Thread.sleep(1000);
 
         verify(completionListener, times(1)).onCompletion(chain);
-        assertTrue(chain.isCompleted());
-        assertEquals(2, chain.getElements().size());
+        assertTrue(chain.isCompleted(), "Chain should be marked as completed");
+        assertEquals(2, chain.getElements().size(), "Should retrieve 2 elements");
     }
 
     @Test
-    void testFlatChain_ErrorOnSubscription() throws InterruptedException {
+    void testFlatChain_SynchronousSubscription_EmptyChain() throws InterruptedException {
+        FlatChain chain = FlatChain.Builder()
+                .with(ommConsumer)
+                .withChainName("0#TEST.CHA")
+                .withServiceName("ELEKTRON_DD")
+                .build();
+
+        when(ommConsumer.registerClient(any(ReqMsg.class), any(OmmConsumerClient.class), any()))
+                .thenAnswer(invocation -> {
+                    OmmConsumerClient client = invocation.getArgument(1);
+                    client.onRefreshMsg(mockRefreshMsgWithElements(), ommConsumer);
+                    return 123L;
+                });
+
+        CountDownLatch latch = new CountDownLatch(1);
+        chain.subscribeSynchronously(() -> latch.countDown());
+
+        assertTrue(latch.await(2, TimeUnit.SECONDS), "Synchronous subscription should complete for empty chain");
+        assertTrue(chain.isCompleted(), "Chain should be marked as completed");
+        assertTrue(chain.getElements().isEmpty(), "Elements list should be empty");
+    }
+
+    @Test
+    void testFlatChain_Subscription_Error() {
         FlatChain chain = FlatChain.Builder()
                 .with(ommConsumer)
                 .withChainName("0#TEST.CHA")
@@ -160,9 +145,9 @@ public class ValueAddObjectsTests {
                 .thenThrow(new RuntimeException("Subscription failed"));
 
         CountDownLatch latch = new CountDownLatch(1);
-        assertThrows(ValueAddObjectsForEmaException.class, () -> 
-            chain.subscribeSynchronously(() -> latch.countDown()));
-        assertFalse(latch.await(1, TimeUnit.SECONDS));
+        assertThrows(ValueAddObjectsForEmaException.class, () ->
+                chain.subscribeSynchronously(() -> latch.countDown()), "Should throw exception on subscription failure");
+        assertFalse(chain.isCompleted(), "Chain should not be marked as completed");
     }
 
     @Test
@@ -173,18 +158,37 @@ public class ValueAddObjectsTests {
                 .withServiceName("ELEKTRON_DD")
                 .build();
 
+        chain.subscribeAsynchronously(); // Register handle
         chain.unsubscribe();
         verify(ommConsumer, times(1)).unregister(123L);
     }
 
-    // Tests for chain package - RecursiveChain
     @Test
-    void testRecursiveChain_BuilderValidation() {
-        assertThrows(ValueAddObjectsForEmaException.class, () -> RecursiveChain.Builder().build());
-        assertThrows(ValueAddObjectsForEmaException.class, () -> 
-            RecursiveChain.Builder().withChainName("0#TEST.CHA").build());
-        assertThrows(ValueAddObjectsForEmaException.class, () -> 
-            RecursiveChain.Builder().with(ommConsumer).build());
+    void testFlatChain_GetNameAndService() {
+        FlatChain chain = FlatChain.Builder()
+                .with(ommConsumer)
+                .withChainName("0#TEST.CHA")
+                .withServiceName("ELEKTRON_DD")
+                .build();
+
+        assertEquals("0#TEST.CHA", chain.getName(), "Chain name should match");
+        assertEquals("ELEKTRON_DD", chain.getServiceName(), "Service name should match");
+    }
+
+    // RecursiveChain Tests
+    @Test
+    void testRecursiveChain_BuilderValidation_NullParameters() {
+        assertThrows(ValueAddObjectsForEmaException.class, () -> RecursiveChain.Builder().build(),
+                "Builder should throw exception for missing OmmConsumer");
+        assertThrows(ValueAddObjectsForEmaException.class, () ->
+                        RecursiveChain.Builder().withChainName("0#TEST.CHA").build(),
+                "Builder should throw exception for missing OmmConsumer");
+        assertThrows(ValueAddObjectsForEmaException.class, () ->
+                        RecursiveChain.Builder().with(ommConsumer).build(),
+                "Builder should throw exception for missing chain name");
+        assertThrows(ValueAddObjectsForEmaException.class, () ->
+                        RecursiveChain.Builder().with(ommConsumer).withChainName("").build(),
+                "Builder should throw exception for empty chain name");
     }
 
     @Test
@@ -210,17 +214,17 @@ public class ValueAddObjectsTests {
         CountDownLatch latch = new CountDownLatch(1);
         chain.subscribeSynchronously(() -> latch.countDown());
 
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
-        assertTrue(chain.isCompleted());
+        assertTrue(latch.await(2, TimeUnit.SECONDS), "Synchronous subscription should complete");
+        assertTrue(chain.isCompleted(), "Chain should be marked as completed");
         List<String> elements = chain.getElements();
-        assertEquals(2, elements.size());
-        assertTrue(elements.contains("TEST1"));
-        assertTrue(elements.contains("TEST2"));
+        assertEquals(3, elements.size(), "Should retrieve 3 elements");
+        assertTrue(elements.contains("TEST1"), "Elements should include TEST1");
+        assertTrue(elements.contains("TEST2"), "Elements should include TEST2");
+        assertTrue(elements.contains("TEST3"), "Elements should include TEST3");
     }
 
     @Test
-    void testRecursiveChain_ChainElementConsumer() throws InterruptedException {
-        ChainElementConsumer elementConsumer = mock(ChainElementConsumer.class);
+    void testRecursiveChain_AsynchronousSubscription_ChainElementConsumer() throws InterruptedException {
         RecursiveChain chain = RecursiveChain.Builder()
                 .with(ommConsumer)
                 .withChainName("0#TEST.CHA")
@@ -239,11 +243,12 @@ public class ValueAddObjectsTests {
         Thread.sleep(1000);
 
         verify(elementConsumer, times(2)).onChainElementReceived(anyString(), eq(chain));
-        assertTrue(chain.isCompleted());
+        assertTrue(chain.isCompleted(), "Chain should be marked as completed");
+        assertEquals(2, chain.getElements().size(), "Should retrieve 2 elements");
     }
 
     @Test
-    void testRecursiveChain_EmptyChain() throws InterruptedException {
+    void testRecursiveChain_SynchronousSubscription_EmptyChain() throws InterruptedException {
         RecursiveChain chain = RecursiveChain.Builder()
                 .with(ommConsumer)
                 .withChainName("0#TEST.CHA")
@@ -260,30 +265,51 @@ public class ValueAddObjectsTests {
         CountDownLatch latch = new CountDownLatch(1);
         chain.subscribeSynchronously(() -> latch.countDown());
 
-        assertTrue(latch.await(2, TimeUnit.SECONDS));
-        assertTrue(chain.isCompleted());
-        assertTrue(chain.getElements().isEmpty());
+        assertTrue(latch.await(2, TimeUnit.SECONDS), "Synchronous subscription should complete for empty chain");
+        assertTrue(chain.isCompleted(), "Chain should be marked as completed");
+        assertTrue(chain.getElements().isEmpty(), "Elements list should be empty");
     }
 
     @Test
-    void testChain_GetNameAndService() {
-        FlatChain flatChain = FlatChain.Builder()
+    void testRecursiveChain_Subscription_Error() {
+        RecursiveChain chain = RecursiveChain.Builder()
                 .with(ommConsumer)
                 .withChainName("0#TEST.CHA")
                 .withServiceName("ELEKTRON_DD")
                 .build();
 
-        assertEquals("0#TEST.CHA", flatChain.getName());
-        assertEquals("ELEKTRON_DD", flatChain.getServiceName());
+        when(ommConsumer.registerClient(any(ReqMsg.class), any(OmmConsumerClient.class), any()))
+                .thenThrow(new RuntimeException("Subscription failed"));
 
-        RecursiveChain recursiveChain = RecursiveChain.Builder()
+        CountDownLatch latch = new CountDownLatch(1);
+        assertThrows(ValueAddObjectsForEmaException.class, () ->
+                chain.subscribeSynchronously(() -> latch.countDown()), "Should throw exception on subscription failure");
+        assertFalse(chain.isCompleted(), "Chain should not be marked as completed");
+    }
+
+    @Test
+    void testRecursiveChain_Unsubscribe() {
+        RecursiveChain chain = RecursiveChain.Builder()
                 .with(ommConsumer)
                 .withChainName("0#TEST.CHA")
                 .withServiceName("ELEKTRON_DD")
                 .build();
 
-        assertEquals("0#TEST.CHA", recursiveChain.getName());
-        assertEquals("ELEKTRON_DD", recursiveChain.getServiceName());
+        chain.subscribeAsynchronously(); // Register handle
+        chain.unsubscribe();
+        verify(ommConsumer, times(1)).unregister(123L);
+    }
+
+    @Test
+    void testRecursiveChain_GetNameAndService() {
+        RecursiveChain chain = RecursiveChain.Builder()
+                .with(ommConsumer)
+                .withChainName("0#TEST.CHA")
+                .withServiceName("ELEKTRON_DD")
+                .build();
+
+        assertEquals("0#TEST.CHA", chain.getName(), "Chain name should match");
+        assertEquals("ELEKTRON_DD", chain.getServiceName(), "Service name should match");
     }
 
     // Helper method to create a mock RefreshMsg with chain elements

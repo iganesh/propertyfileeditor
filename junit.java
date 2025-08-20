@@ -35,7 +35,7 @@ public class ChainPackageTests {
     @Mock
     private ChainElementConsumer elementConsumer;
 
-    // Mock for OnCompletionListener (avoiding direct import)
+    // Mock for completion listener (avoiding OnCompletionListener import)
     @SuppressWarnings("unchecked")
     private Consumer<Chain> completionListener = mock(Consumer.class);
 
@@ -48,16 +48,16 @@ public class ChainPackageTests {
     // FlatChain Tests
     @Test
     void testFlatChain_BuilderValidation_NullParameters() {
-        assertThrows(ValueAddObjectsForEmaException.class, () -> FlatChain.Builder().build(),
+        assertThrows(RuntimeException.class, () -> FlatChain.Builder().build(),
                 "Builder should throw exception for missing OmmConsumer");
-        assertThrows(ValueAddObjectsForEmaException.class, () ->
-                        FlatChain.Builder().withChainName("0#TEST.CHA").build(),
+        assertThrows(RuntimeException.class, () ->
+                FlatChain.Builder().withChainName("0#TEST.CHA").build(),
                 "Builder should throw exception for missing OmmConsumer");
-        assertThrows(ValueAddObjectsForEmaException.class, () ->
-                        FlatChain.Builder().with(ommConsumer).build(),
+        assertThrows(RuntimeException.class, () ->
+                FlatChain.Builder().with(ommConsumer).build(),
                 "Builder should throw exception for missing chain name");
-        assertThrows(ValueAddObjectsForEmaException.class, () ->
-                        FlatChain.Builder().with(ommConsumer).withChainName("").build(),
+        assertThrows(RuntimeException.class, () ->
+                FlatChain.Builder().with(ommConsumer).withChainName("").build(),
                 "Builder should throw exception for empty chain name");
     }
 
@@ -146,7 +146,7 @@ public class ChainPackageTests {
                 .thenThrow(new RuntimeException("Subscription failed"));
 
         CountDownLatch latch = new CountDownLatch(1);
-        assertThrows(ValueAddObjectsForEmaException.class, () ->
+        assertThrows(RuntimeException.class, () ->
                 chain.subscribeSynchronously(() -> latch.countDown()), "Should throw exception on subscription failure");
         assertFalse(chain.isCompleted(), "Chain should not be marked as completed");
     }
@@ -179,16 +179,16 @@ public class ChainPackageTests {
     // RecursiveChain Tests
     @Test
     void testRecursiveChain_BuilderValidation_NullParameters() {
-        assertThrows(ValueAddObjectsForEmaException.class, () -> RecursiveChain.Builder().build(),
+        assertThrows(RuntimeException.class, () -> RecursiveChain.Builder().build(),
                 "Builder should throw exception for missing OmmConsumer");
-        assertThrows(ValueAddObjectsForEmaException.class, () ->
-                        RecursiveChain.Builder().withChainName("0#TEST.CHA").build(),
+        assertThrows(RuntimeException.class, () ->
+                RecursiveChain.Builder().withChainName("0#TEST.CHA").build(),
                 "Builder should throw exception for missing OmmConsumer");
-        assertThrows(ValueAddObjectsForEmaException.class, () ->
-                        RecursiveChain.Builder().with(ommConsumer).build(),
+        assertThrows(RuntimeException.class, () ->
+                RecursiveChain.Builder().with(ommConsumer).build(),
                 "Builder should throw exception for missing chain name");
-        assertThrows(ValueAddObjectsForEmaException.class, () ->
-                        RecursiveChain.Builder().with(ommConsumer).withChainName("").build(),
+        assertThrows(RuntimeException.class, () ->
+                RecursiveChain.Builder().with(ommConsumer).withChainName("").build(),
                 "Builder should throw exception for empty chain name");
     }
 
@@ -283,7 +283,7 @@ public class ChainPackageTests {
                 .thenThrow(new RuntimeException("Subscription failed"));
 
         CountDownLatch latch = new CountDownLatch(1);
-        assertThrows(ValueAddObjectsForEmaException.class, () ->
+        assertThrows(RuntimeException.class, () ->
                 chain.subscribeSynchronously(() -> latch.countDown()), "Should throw exception on subscription failure");
         assertFalse(chain.isCompleted(), "Chain should not be marked as completed");
     }

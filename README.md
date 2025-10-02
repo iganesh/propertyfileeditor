@@ -59,3 +59,4 @@ Improve UX with loading indicators or advanced styling.
 Purpose:
 Designed as a lightweight tool for developers and administrators to manage configuration files without manual editing, this application combines simplicity with functionality, making property management efficient and accessible through a web interface.
 
+https://community.developers.refinitiv.com/discussion/27324/read-resource-file-rdmfielddictionary-have-some-problem

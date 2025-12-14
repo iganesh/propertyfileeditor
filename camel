@@ -1,0 +1,50 @@
+Step-by-Step Migration Plan
+Upgrade Java: Minimum Java 17 (Java 21 recommended for Camel 4.2+). Update pom.xml or build.gradle.​
+
+Step 1: Camel 2.x → 3.20 (major breaking changes):
+
+Replace org.apache.camel → org.apache.camel.impl packages and deprecated APIs
+
+Migrate XML DSL to Java DSL where possible (Camel 3 removed many XML features)
+
+Update components: camel-http4 → camel-http, fix Namespaces class removal
+
+Test thoroughly: many DSL changes, error handlers, interceptors changed​
+
+Step 2: Camel 3.20 → 4.0 (smaller changes):
+
+Update Spring Boot 2 → 3 (if using Spring Boot starter)
+
+Replace javax.* → jakarta.* imports across all dependencies
+
+Update BOM: <camel-bom.version>4.8.0</camel-bom.version> (latest stable)
+
+Remove deprecated/unsupported components (check migration guide for replacements)
+
+
+
+<properties>
+    <camel.version>3.20.7</camel.version>  <!-- Latest 3.20 patch -->
+    <spring-boot.version>2.7.18</spring-boot.version>  <!-- Compatible -->
+</properties>
+
+<dependencyManagement>
+    <dependencies>
+        <!-- Manages all camel-spring-boot-* starters to 3.20.7 -->
+        <dependency>
+            <groupId>org.apache.camel.springboot</groupId>
+            <artifactId>camel-spring-boot-bom</artifactId>
+            <version>${camel.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<dependencies>
+    <!-- Core starter auto-configures CamelContext -->
+    <dependency>
+        <groupId>org.apache.camel.springboot</groupId>
+        <artifactId>camel-spring-boot-starter</artifactId>
+    </dependency>
+</dependencies>
